@@ -821,17 +821,18 @@ class RewriterApp(object):
         text = res.content.split(b'\n')
         for t in text:
             if t:
-                cdxformat = None
-                fields = t.split(b' ')
-                if len(fields) > 14:
-                    fields = fields[:-2]
-                for i in CDXObject().CDX_FORMATS:
-                    if len(i) == len(fields):
-                        cdxformat = i
-
-                if not cdxformat:
-                    msg = f'unknown {len(fields)}-field cdx format: {fields}'
-                    raise CDXException(msg)
+                cdxformat = ['urlkey', 'timestamp', 'url']
+                fields = t.split(b' ', 3)[:-1]
+                # fields = t.split(b' ')
+                # if len(fields) > 14:
+                #     fields = fields[:-2]
+                # for i in CDXObject().CDX_FORMATS:
+                #     if len(i) == len(fields):
+                #         cdxformat = i
+                #
+                # if not cdxformat:
+                #     msg = f'unknown {len(fields)}-field cdx format: {fields}'
+                #     raise CDXException(msg)
                 cdx = {}
                 for header, field in zip(cdxformat, fields):
                     cdx[header] = to_native_str(field, 'utf-8')
