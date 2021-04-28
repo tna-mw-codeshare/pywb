@@ -864,9 +864,8 @@ class RewriterApp(object):
             'url': wb_url.url,
         }
         res = self.do_query_timeline(wb_url, kwargs)
-        if res.content:
-            timeline = self.make_timeline(res)
-            params.update(timeline)
+        timeline = self.make_timeline(res)
+        params.update(timeline)
         return self.query_view.render_to_string(environ, **params)
 
     def get_host_prefix(self, environ):
