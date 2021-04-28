@@ -173,36 +173,36 @@ class AccessChecker(object):
                       'nosource': 'true',
                       'exact_match_suffix': self.EXACT_SUFFIX_SEARCH_B
                       }
-        if collection:
-            params['param.coll'] = collection
+            if collection:
+                params['param.coll'] = collection
 
-            acl_iter, errs = self.aggregator(params)
-            if errs:
-                print(errs)
+                acl_iter, errs = self.aggregator(params)
+                if errs:
+                    print(errs)
 
-            key = params['key']
-            key_exact = key + self.EXACT_SUFFIX_B
+                key = params['key']
+                key_exact = key + self.EXACT_SUFFIX_B
 
-            tld = key.split(b',')[0]
+                tld = key.split(b',')[0]
 
-            for acl in acl_iter:
+                for acl in acl_iter:
 
-                # skip empty/invalid lines
-                if not acl:
-                    continue
+                    # skip empty/invalid lines
+                    if not acl:
+                        continue
 
-                acl_key = acl.split(b' ')[0]
+                    acl_key = acl.split(b' ')[0]
 
-                if key_exact == acl_key:
-                    return CDXObject(acl)
+                    if key_exact == acl_key:
+                        return CDXObject(acl)
 
-                if key.startswith(acl_key):
-                    return CDXObject(acl)
+                    if key.startswith(acl_key):
+                        return CDXObject(acl)
 
-                # if acl key already less than first tld,
-                # no match can be found
-                if acl_key < tld:
-                    break
+                    # if acl key already less than first tld,
+                    # no match can be found
+                    if acl_key < tld:
+                        break
 
         return self.default_rule
 

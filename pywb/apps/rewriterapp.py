@@ -847,6 +847,7 @@ class RewriterApp(object):
         params = {'num_instances': num_instances,
                   'num_by_year': num_by_year,
                   'cdx_years': cdx_years,
+                  'site_meta': '',
                   }
         return params
 
@@ -866,7 +867,6 @@ class RewriterApp(object):
         if res.content:
             timeline = self.make_timeline(res)
             params.update(timeline)
-
         return self.query_view.render_to_string(environ, **params)
 
     def get_host_prefix(self, environ):
