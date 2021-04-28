@@ -94,7 +94,8 @@ class WbUrl(BaseWbUrl):
     # Regexs
     # ======================
     QUERY_REGEX = re.compile('^(?:([\w\-:]+)/)?(\d*)[*-](\d*)/?(.+)$')
-    REPLAY_REGEX = re.compile('^(\d*)([a-z]+_|[$][a-z0-9:.-]+)?/{1,3}(.+)$')
+    #REPLAY_REGEX = re.compile('^(\d*)([a-z]+_|[$][a-z0-9:.-]+)?/{1,3}(.+)$')
+    REPLAY_REGEX = re.compile('^(nobanner)?/?(\d*)([a-z]+_|[$][a-z0-9:.-]+)?/{1,3}(.+)$')
     #LATEST_REPLAY_REGEX = re.compile('^\w_)')
 
     DEFAULT_SCHEME = 'http://'
@@ -259,14 +260,19 @@ class WbUrl(BaseWbUrl):
             self.mod = ''
             self.url = url
             self.type = self.LATEST_REPLAY
+            self.nobanner = False
             return True
 
         res = replay.groups('')
 
-        self.timestamp = res[0]
-        self.mod = res[1]
-        self.url = res[2]
+        self.nobanner = True if res[0] == 'nobanner' else False
+        self.timestamp = res[1]
+        self.mod = res[2]
+        self.url = res[3]
 
+        if self.nobanner:
+            self.mod = 'uo_'
+            self.type = None
         if self.timestamp:
             self.type = self.REPLAY
         else:
