@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from io import BytesIO
 
 import requests
@@ -5,7 +6,8 @@ from fakeredis import FakeStrictRedis
 from six.moves.urllib.parse import unquote, urlencode, urlsplit, urlunsplit
 from warcio.bufferedreaders import BufferedReader
 from warcio.recordloader import ArcWarcRecordLoader
-from warcio.timeutils import http_date_to_timestamp, timestamp_to_http_date
+from warcio.timeutils import http_date_to_timestamp, timestamp_to_http_date, timestamp_to_datetime
+from warcio.utils import to_native_str
 
 from pywb.apps.wbrequestresponse import WbResponse
 from pywb.rewrite.cookies import CookieTracker
@@ -18,7 +20,7 @@ from pywb.utils.canonicalize import canonicalize
 from pywb.utils.io import BUFF_SIZE, OffsetLimitReader, no_except_close
 from pywb.utils.memento import MementoUtils
 from pywb.utils.wbexception import NotFoundException, UpstreamException
-from pywb.warcserver.index.cdxobject import CDXObject
+from pywb.warcserver.index.cdxobject import CDXObject, CDXException
 
 
 # ============================================================================
@@ -754,6 +756,18 @@ class RewriterApp(object):
 
         return r
 
+    def do_query_timeline(self, wb_url, kwargs):
+        params = {
+            'url': wb_url.url,
+            'output': kwargs.get('output', 'text')
+        }
+        upstream_url = self.get_upstream_url(wb_url, kwargs, params)
+        upstream_url = upstream_url.replace('/resource/postreq', '/index')
+        # upstream_url = f'{prefix}cdx?output=text&url={wb_url.url}'
+
+        r = requests.get(upstream_url)
+        return r
+
     def make_timemap(self, wb_url, res, full_prefix, output):
         wb_url.type = wb_url.QUERY
 
@@ -777,6 +791,64 @@ class RewriterApp(object):
                                         content_type=content_type,
                                         status=status)
 
+    def group_by_year(self, cdx_lines):
+        num_instances = 0
+        num_by_year = dict()
+        cdx_ymd_prev = "19700101"
+        cdx_grouped = defaultdict(dict)
+        for cdx in cdx_lines:
+            cdx_dt = timestamp_to_datetime(cdx['timestamp'])
+            cdx_ymd = "{}{}{}".format(cdx_dt.year, cdx_dt.month, cdx_dt.day)
+            if self.config.get('limit_one_per_day', False):
+                if cdx_ymd == cdx_ymd_prev:
+                    continue
+            num_instances += 1
+            try:
+                cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)].append(cdx)
+            except KeyError:
+                cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)] = [cdx]
+            try:
+                num_by_year[str(cdx_dt.year)] += 1
+            except KeyError:
+                num_by_year[str(cdx_dt.year)] = 1
+            cdx_ymd_prev = cdx_ymd
+        return (num_instances, num_by_year, OrderedDict(
+            sorted(cdx_grouped.items(), key=lambda x: x[0], reverse=True))
+                )
+
+    def timeline_renderer(self, res) -> tuple[int, dict[str, int], OrderedDict]:
+        content = []
+        text = res.content.split(b'\n')
+        for t in text:
+            if t:
+                cdxformat = None
+                fields = t.split(b' ')
+                if len(fields) > 14:
+                    fields = fields[:-2]
+                for i in CDXObject().CDX_FORMATS:
+                    if len(i) == len(fields):
+                        cdxformat = i
+
+                if not cdxformat:
+                    msg = f'unknown {len(fields)}-field cdx format: {fields}'
+                    raise CDXException(msg)
+                cdx = {}
+                for header, field in zip(cdxformat, fields):
+                    cdx[header] = to_native_str(field, 'utf-8')
+                content.append(cdx)
+        return self.group_by_year(content)
+
+    def make_timeline(self, res):
+
+        num_instances, num_by_year, cdx_years = self.timeline_renderer(res)
+        if num_instances == 0:
+            raise NotFoundException('No archives found')
+        params = {'num_instances': num_instances,
+                  'num_by_year': num_by_year,
+                  'cdx_years': cdx_years,
+                  }
+        return params
+
     def handle_timemap(self, wb_url, kwargs, full_prefix):
         output = kwargs.get('output')
         kwargs['memento_format'] = full_prefix + '{timestamp}' + self.replay_mod + '/{url}'
@@ -785,9 +857,14 @@ class RewriterApp(object):
 
     def handle_query(self, environ, wb_url, kwargs, full_prefix):
         prefix = self.get_full_prefix(environ)
-
-        params = dict(url=wb_url.url,
-                      prefix=prefix)
+        params = {
+            'prefix': prefix,
+            'url': wb_url.url,
+        }
+        res = self.do_query_timeline(wb_url, kwargs)
+        if res.content:
+            timeline = self.make_timeline(res)
+            params.update(timeline)
 
         return self.query_view.render_to_string(environ, **params)
 

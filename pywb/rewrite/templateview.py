@@ -267,6 +267,31 @@ class JinjaEnv(object):
 
             return 'true' if bool_val else 'false'
 
+        @self.template_filter()
+        def month_abbr(value):
+            choices = {
+                '1': 'Jan', '2': 'Feb', '3': 'Mar',
+                '4': 'Apr', '5': 'May', '6': 'Jun',
+                '7': 'Jul', '8': 'Aug', '9': 'Sep',
+                '10': 'Oct', '11': 'Nov', '12': 'Dec'
+            }
+            return choices[str(value)]
+
+        @self.template_filter()
+        def ts_year(value):
+            value = timestamp_to_datetime(value)
+            return value.year
+
+        @self.template_filter()
+        def ts_month(value):
+            value = timestamp_to_datetime(value)
+            return value.month
+
+        @self.template_filter()
+        def ts_day(value):
+            value = timestamp_to_datetime(value)
+            return value.day
+
 
 # ============================================================================
 class BaseInsertView(object):
