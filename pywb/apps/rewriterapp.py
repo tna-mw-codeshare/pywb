@@ -854,7 +854,7 @@ class RewriterApp(object):
             'url': wb_url.url,
         }
         res = self.do_query_timeline(wb_url, kwargs)
-        if not res.status_code == 200:
+        if res.status_code == 500:
             raise NotFoundException('Not found')
         timeline = self.make_timeline(res)
         params.update(timeline)
