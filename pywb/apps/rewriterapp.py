@@ -714,7 +714,7 @@ class RewriterApp(object):
         else:
             closest = wb_url.timestamp
 
-        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact'}
+        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact', 'filter': '~status:[2-3][0-9][0-9]'}
 
         if wb_url.mod == 'vi_':
             params['content_type'] = self.VIDEO_INFO_CONTENT_TYPE
