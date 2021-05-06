@@ -759,12 +759,12 @@ class RewriterApp(object):
     def do_query_timeline(self, wb_url, kwargs):
         params = {
             'url': wb_url.url,
-            'output': kwargs.get('output', 'text')
+            'output': kwargs.get('output', 'text'),
+            'filter': '~status:[2-3][0-9][0-9]',
         }
         upstream_url = self.get_upstream_url(wb_url, kwargs, params)
         upstream_url = upstream_url.replace('/resource/postreq', '/index')
         # upstream_url = f'{prefix}cdx?output=text&url={wb_url.url}'
-
         r = requests.get(upstream_url)
         return r
 
