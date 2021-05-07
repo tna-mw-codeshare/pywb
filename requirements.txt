@@ -16,4 +16,4 @@ fakeredis<1.0
 tldextract
 babel
 mw-takedowns @ git+ssh://git@github.com/mirrorweb/mw-takedowns@master 
-pyw3amf
+py3amf
