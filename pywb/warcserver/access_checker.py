@@ -1,3 +1,6 @@
+from itertools import tee
+from warcio.timeutils import timestamp_to_datetime
+
 from pywb.warcserver.index.indexsource import FileIndexSource
 from pywb.warcserver.index.aggregator import DirectoryIndexSource, CacheDirectoryMixin
 from pywb.warcserver.index.aggregator import SimpleAggregator
@@ -153,58 +156,56 @@ class AccessChecker(object):
         if one exists otherwise the default rule
         :rtype: CDXObject
         """
-        if self.mw_takedowns:
-            access_response = url_blocked(
-                takedown_collection={
-                    "assume_role": os.getenv('ASSUME_ROLE'),
-                    "table_value": os.getenv('TABLE_VALUE'),
-                    "display_name": os.getenv('DISPLAY_NAME'),
-                    "table_region": os.getenv('TABLE_REGION'),
-                    "customer_slug": os.getenv('CUSTOMER_SLUG')
-                }, url=url)
 
-            if not access_response.allowed_dates:
-                acl = f'{urlkey} - {{"access": "exclude"}}'
-                acl = bytes(acl, 'utf-8')
-                return CDXObject(acl)
-        else:
-            params = {'url': url,
-                      'urlkey': urlkey,
-                      'nosource': 'true',
-                      'exact_match_suffix': self.EXACT_SUFFIX_SEARCH_B
-                      }
-            if collection:
-                params['param.coll'] = collection
+        params = {'url': url,
+                  'urlkey': urlkey,
+                  'nosource': 'true',
+                  'exact_match_suffix': self.EXACT_SUFFIX_SEARCH_B
+                  }
+        if collection:
+            params['param.coll'] = collection
 
-                acl_iter, errs = self.aggregator(params)
-                if errs:
-                    print(errs)
+            acl_iter, errs = self.aggregator(params)
+            if errs:
+                print(errs)
 
-                key = params['key']
-                key_exact = key + self.EXACT_SUFFIX_B
+            key = params['key']
+            key_exact = key + self.EXACT_SUFFIX_B
 
-                tld = key.split(b',')[0]
+            tld = key.split(b',')[0]
 
-                for acl in acl_iter:
+            for acl in acl_iter:
 
-                    # skip empty/invalid lines
-                    if not acl:
-                        continue
+                # skip empty/invalid lines
+                if not acl:
+                    continue
 
-                    acl_key = acl.split(b' ')[0]
+                acl_key = acl.split(b' ')[0]
 
-                    if key_exact == acl_key:
-                        return CDXObject(acl)
+                if key_exact == acl_key:
+                    return CDXObject(acl)
 
-                    if key.startswith(acl_key):
-                        return CDXObject(acl)
+                if key.startswith(acl_key):
+                    return CDXObject(acl)
 
-                    # if acl key already less than first tld,
-                    # no match can be found
-                    if acl_key < tld:
-                        break
+                # if acl key already less than first tld,
+                # no match can be found
+                if acl_key < tld:
+                    break
 
         return self.default_rule
+
+    @staticmethod
+    def find_access_rule_mw(url, dates: []):
+        access_response = url_blocked(
+            takedown_collection={
+                "assume_role": os.getenv('ASSUME_ROLE'),
+                "table_value": os.getenv('TABLE_VALUE'),
+                "display_name": os.getenv('DISPLAY_NAME'),
+                "table_region": os.getenv('TABLE_REGION'),
+                "customer_slug": os.getenv('CUSTOMER_SLUG')
+            }, url=url, dates=dates)
+        return access_response
 
     def __call__(self, res):
         """Wraps the cdx iter in the supplied tuple returning a
@@ -225,29 +226,51 @@ class AccessChecker(object):
         :param cdx_iter: The cdx object iterator to be wrapped
         :return: The wrapped cdx object iterator
         """
-        last_rule = None
-        last_url = None
 
-        for cdx in cdx_iter:
-            url = cdx.get('url')
-            # if no url, possible idx or other object, don't apply any checks and pass through
-            if not url:
+        if self.mw_takedowns:
+            cdx_url, cdx_dates, cdx_res = tee(cdx_iter, 3)
+            url = None
+            for cdx in cdx_url:
+                url = cdx.get('url')
+                if not url:
+                    yield cdx
+                break
+
+            dates = [cdx['timestamp'] for cdx in cdx_dates]
+            unique_dates = set()
+            for date in dates:
+                unique_dates.add(date)
+            rule = self.find_access_rule_mw(url, unique_dates)
+            if not rule.allowed_dates:
+                return self.default_rule
+            for res in cdx_res:
+                if timestamp_to_datetime(res['timestamp']) not in rule.blocked_dates:
+                    res['access'] = 'allow'
+                    yield res
+
+        else:
+            last_rule = None
+            last_url = None
+            for cdx in cdx_iter:
+                url = cdx.get('url')
+                # if no url, possible idx or other object, don't apply any checks and pass through
+                if not url:
+                    yield cdx
+                    continue
+
+                # TODO: optimization until date range support is included
+                if url == last_url:
+                    rule = last_rule
+                else:
+                    rule = self.find_access_rule(url, cdx.get('timestamp'), cdx.get('urlkey'),
+                                                 cdx.get('source-coll'))
+
+                access = rule.get('access', 'exclude')
+                if access == 'exclude':
+                    continue
+
+                cdx['access'] = access
                 yield cdx
-                continue
 
-            # TODO: optimization until date range support is included
-            if url == last_url:
-                rule = last_rule
-            else:
-                rule = self.find_access_rule(url, cdx.get('timestamp'), cdx.get('urlkey'),
-                                             cdx.get('source-coll'))
-
-            access = rule.get('access', 'exclude')
-            if access == 'exclude':
-                continue
-
-            cdx['access'] = access
-            yield cdx
-
-            last_rule = rule
-            last_url = url
+                last_rule = rule
+                last_url = url

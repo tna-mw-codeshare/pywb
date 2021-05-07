@@ -714,7 +714,7 @@ class RewriterApp(object):
         else:
             closest = wb_url.timestamp
 
-        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact'}
+        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact', 'filter': '~status:[2-3][0-9][0-9]'}
 
         if wb_url.mod == 'vi_':
             params['content_type'] = self.VIDEO_INFO_CONTENT_TYPE
@@ -759,12 +759,12 @@ class RewriterApp(object):
     def do_query_timeline(self, wb_url, kwargs):
         params = {
             'url': wb_url.url,
-            'output': kwargs.get('output', 'text')
+            'output': kwargs.get('output', 'text'),
+            'filter': '~status:[2-3][0-9][0-9]',
         }
         upstream_url = self.get_upstream_url(wb_url, kwargs, params)
         upstream_url = upstream_url.replace('/resource/postreq', '/index')
         # upstream_url = f'{prefix}cdx?output=text&url={wb_url.url}'
-
         r = requests.get(upstream_url)
         return r
 
@@ -854,6 +854,8 @@ class RewriterApp(object):
             'url': wb_url.url,
         }
         res = self.do_query_timeline(wb_url, kwargs)
+        if res.status_code == 500:
+            raise NotFoundException('Not found')
         timeline = self.make_timeline(res)
         params.update(timeline)
         return self.query_view.render_to_string(environ, **params)
