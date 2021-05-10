@@ -17,3 +17,4 @@ tldextract
 babel
 mw-takedowns @ git+ssh://git@github.com/mirrorweb/mw-takedowns@master 
 py3amf
+gunicorn
