@@ -49,6 +49,7 @@ class RewriterApp(object):
         self.paths = paths or {}
 
         self.framed_replay = framed_replay
+        self.continuity = self.config.get('continuity', dict())
 
         if framed_replay:
             self.frame_mod = ''
@@ -479,32 +480,36 @@ class RewriterApp(object):
             set_content_loc = True
 
         # if redirect to exact timestamp, bit only if not live
-        if redirect_to_exact and not cdx.get('is_live'):
-            if set_content_loc or is_timegate or wb_url.timestamp != cdx.get('timestamp'):
-                new_url = urlrewriter.get_new_url(url=target_uri,
-                                                  timestamp=cdx['timestamp'],
-                                                  mod=wb_url.mod)
+        if not wb_url.is_continuity_replay():
+            if redirect_to_exact and not cdx.get('is_live'):
+                if set_content_loc or is_timegate or wb_url.timestamp != cdx.get('timestamp'):
+                    new_url = urlrewriter.get_new_url(url=target_uri,
+                                                      timestamp=cdx['timestamp'],
+                                                      mod=wb_url.mod)
 
-                resp = WbResponse.redir_response(new_url, '307 Temporary Redirect')
-                if self.enable_memento:
-                    if is_timegate and not is_proxy:
-                        self._add_memento_links(target_uri, full_prefix,
-                                                memento_dt, cdx['timestamp'],
-                                                resp.status_headers,
-                                                is_timegate, is_proxy,
-                                                pref_applied=pref_applied,
-                                                mod=pref_mod,
-                                                is_memento=False)
+                    resp = WbResponse.redir_response(new_url, '307 Temporary Redirect')
+                    if self.enable_memento:
+                        if is_timegate and not is_proxy:
+                            self._add_memento_links(target_uri, full_prefix,
+                                                    memento_dt, cdx['timestamp'],
+                                                    resp.status_headers,
+                                                    is_timegate, is_proxy,
+                                                    pref_applied=pref_applied,
+                                                    mod=pref_mod,
+                                                    is_memento=False)
 
-                    else:
-                        resp.status_headers['Link'] = MementoUtils.make_link(target_uri, 'original')
+                        else:
+                            resp.status_headers['Link'] = MementoUtils.make_link(target_uri, 'original')
 
-                return resp
+                    return resp
 
         self._add_custom_params(cdx, r.headers, kwargs, record)
 
         if self._add_range(record, wb_url, range_start, range_end):
             wb_url.mod = 'id_'
+
+        if wb_url.type == WbUrl.CONTINUITY:
+            urlrewriter.rewrite_opts['is_continuity'] = True
 
         if is_ajax:
             head_insert_func = None
@@ -710,6 +715,8 @@ class RewriterApp(object):
             headers['Recorder-Skip'] = '1'
 
         if wb_url.is_latest_replay():
+            closest = 'now'
+        elif wb_url.is_continuity_replay():
             closest = 'now'
         else:
             closest = wb_url.timestamp
