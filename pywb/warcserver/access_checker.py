@@ -243,8 +243,10 @@ class AccessChecker(object):
             rule = self.find_access_rule_mw(url, unique_dates)
             if not rule.allowed_dates:
                 return self.default_rule
+
+            dt_blocked = [dt.strftime('%Y%m%d%I%M%S') for dt in rule.blocked_dates]
             for res in cdx_res:
-                if timestamp_to_datetime(res['timestamp']) not in rule.blocked_dates:
+                if res['timestamp'] not in dt_blocked:
                     res['access'] = 'allow'
                     yield res
 
