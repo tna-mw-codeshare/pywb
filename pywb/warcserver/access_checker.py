@@ -235,7 +235,8 @@ class AccessChecker(object):
                 if not url:
                     yield cdx
                 break
-
+            if not url:
+                return
             dates = [cdx['timestamp'] for cdx in cdx_dates]
             unique_dates = set()
             for date in dates:
