@@ -252,10 +252,9 @@ class AccessChecker(object):
 
         for acl in acl_iter:
 
-                # skip empty/invalid lines
-                if not acl:
-                    continue
-
+            # skip empty/invalid lines
+            if not acl:
+                continue
             acl_key = acl.split(b' ')[0]
             acl_obj = None
 
