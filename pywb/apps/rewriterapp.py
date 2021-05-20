@@ -1,10 +1,8 @@
-import os
 from collections import OrderedDict, defaultdict
 from io import BytesIO
 
 import requests
 from fakeredis import FakeStrictRedis
-from mw_takedowns.access_check import url_blocked
 from six.moves.urllib.parse import unquote, urlencode, urlsplit, urlunsplit
 from warcio.bufferedreaders import BufferedReader
 from warcio.recordloader import ArcWarcRecordLoader
