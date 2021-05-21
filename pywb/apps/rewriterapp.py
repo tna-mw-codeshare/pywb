@@ -371,6 +371,7 @@ class RewriterApp(object):
                 response = self.handle_query(environ, wb_url, kwargs, full_prefix)
 
             else:
+                # don't return top-frame response for timegate with exact redirects
                 if not (is_timegate and redirect_to_exact):
                     response = self.handle_custom_response(environ, wb_url,
                                                            full_prefix, host_prefix,
