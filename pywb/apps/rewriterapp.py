@@ -380,8 +380,6 @@ class RewriterApp(object):
                     keep_frame_response = not kwargs.get('no_timegate_check') and is_timegate and not redirect_to_exact and not is_proxy
 
 
-        if response and not keep_frame_response:
-            return self.format_response(response, wb_url, full_prefix, is_timegate, is_proxy)
 
         if is_proxy:
             environ['pywb_proxy_magic'] = environ['wsgiprox.proxy_host']
@@ -444,6 +442,9 @@ class RewriterApp(object):
 
             else:
                 raise UpstreamException(r.status_code, url=wb_url.url, details=details)
+
+        if response and not keep_frame_response:
+            return self.format_response(response, wb_url, full_prefix, is_timegate, is_proxy)
 
         cdx = CDXObject(r.headers.get('Warcserver-Cdx').encode('utf-8'))
 
