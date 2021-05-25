@@ -334,7 +334,7 @@ class AccessChecker(object):
             if not rule.allowed_dates:
                 return self.default_rule
 
-            dt_blocked = [dt.strftime('%Y%m%d%I%M%S') for dt in rule.blocked_dates]
+            dt_blocked = [dt.strftime('%Y%m%d%H%M%S') for dt in rule.blocked_dates]
             for res in cdx_res:
                 if res['timestamp'] not in dt_blocked:
                     res['access'] = 'allow'
