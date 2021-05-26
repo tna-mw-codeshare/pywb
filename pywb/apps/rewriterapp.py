@@ -349,6 +349,7 @@ class RewriterApp(object):
 
         response = None
         keep_frame_response = False
+        timeline_response = True
 
         # prefer overrides custom response?
         if pref_mod is not None:
@@ -378,8 +379,10 @@ class RewriterApp(object):
                                                            kwargs)
 
                     keep_frame_response = not kwargs.get('no_timegate_check') and is_timegate and not redirect_to_exact and not is_proxy
+                    timeline_response = False
 
-
+        if response and not keep_frame_response and timeline_response:
+            return self.format_response(response, wb_url, full_prefix, is_timegate, is_proxy)
 
         if is_proxy:
             environ['pywb_proxy_magic'] = environ['wsgiprox.proxy_host']
