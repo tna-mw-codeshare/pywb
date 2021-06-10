@@ -5,4 +5,3 @@ uwsgi
 ujson
 pysocks
 lxml
-gunicorn
