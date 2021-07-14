@@ -302,6 +302,11 @@ class JinjaEnv(object):
             value = timestamp_to_datetime(value)
             return value.day
 
+        @self.template_filter()
+        def time(value):
+            value = timestamp_to_datetime(value)
+            return f"{value.time()}"
+
 
 # ============================================================================
 class BaseInsertView(object):
