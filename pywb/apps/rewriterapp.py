@@ -830,7 +830,10 @@ class RewriterApp(object):
             try:
                 cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)][str(cdx_dt.day)].append(cdx)
             except KeyError:
-                cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)] = {str(cdx_dt.day): [cdx]}
+                try:
+                    cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)].update({str(cdx_dt.day): [cdx]})
+                except KeyError:
+                    cdx_grouped[str(cdx_dt.year)][str(cdx_dt.month)] = ({str(cdx_dt.day): [cdx]})
             try:
                 num_by_year[str(cdx_dt.year)] += 1
             except KeyError:
