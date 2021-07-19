@@ -305,7 +305,7 @@ class RewriterApp(object):
         return resp
 
     def render_content(self, wb_url, kwargs, environ):
-        wb_url = wb_url.replace('#', '%23')
+        wb_url = wb_url.replace('#', '%23').replace('&', '%26')
         wb_url = WbUrl(wb_url)
 
         proto = environ.get('HTTP_X_FORWARDED_PROTO', self.force_scheme)
