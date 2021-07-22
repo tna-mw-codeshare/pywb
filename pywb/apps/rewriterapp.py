@@ -728,8 +728,13 @@ class RewriterApp(object):
         else:
             closest = wb_url.timestamp
 
-        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact', 'filter': '~status:[2-3][0-9][0-9]'}
+        params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact'}
 
+        if wb_url.is_continuity_replay():
+            params['filter'] = '~status:[2][0][0-6]'
+
+        else:
+            params['filter'] = '~status:[2-3][0-9][0-9]'
         # restrict number of records passed through
         if self.config.get('cdx_replay_results_limit'):
             limit_value = 100
