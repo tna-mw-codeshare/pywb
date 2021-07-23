@@ -735,13 +735,16 @@ class RewriterApp(object):
 
         else:
             params['filter'] = '~status:[2-3][0-9][0-9]'
-        # restrict number of records passed through
+
+            # restrict number of records passed through
         if self.config.get('cdx_replay_results_limit'):
             limit_value = 100
-            try:
-                limit_value = int(self.config['cdx_replay_results_limit'])
-            except Exception as e:
-                pass
+            # setting default limit for continuity mode
+            if not wb_url.is_continuity_replay():
+                try:
+                    limit_value = int(self.config['cdx_replay_results_limit'])
+                except Exception as e:
+                    pass
 
             params['limit'] = limit_value
 
