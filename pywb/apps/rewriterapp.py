@@ -735,15 +735,15 @@ class RewriterApp(object):
 
         else:
             params['filter'] = '~status:[2-3][0-9][0-9]'
-        # restrict number of records passed through
-        if self.config.get('cdx_replay_results_limit'):
-            limit_value = 100
-            try:
-                limit_value = int(self.config['cdx_replay_results_limit'])
-            except Exception as e:
-                pass
+            # restrict number of records passed through
+            if self.config.get('cdx_replay_results_limit'):
+                limit_value = 100
+                try:
+                    limit_value = int(self.config['cdx_replay_results_limit'])
+                except Exception as e:
+                    pass
 
-            params['limit'] = limit_value
+                params['limit'] = limit_value
 
         if wb_url.mod == 'vi_':
             params['content_type'] = self.VIDEO_INFO_CONTENT_TYPE
