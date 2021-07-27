@@ -298,7 +298,7 @@ class WbUrl(BaseWbUrl):
         self.url = res[3]
 
         if self.nobanner:
-            self.mod = 'uo_'
+            self.mod = ''
             self.type = None
         if self.timestamp:
             self.type = self.REPLAY

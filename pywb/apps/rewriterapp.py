@@ -308,6 +308,17 @@ class RewriterApp(object):
         wb_url = wb_url.replace('#', '%23').replace('&', '%26')
         wb_url = WbUrl(wb_url)
 
+        # check for nobanner mode.
+        if wb_url.nobanner:
+            self.framed_replay = False
+            self.frame_mod = None
+            self.replay_mod = ''
+        else:
+            self.framed_replay = True
+            self.frame_mod = ''
+            self.replay_mod = 'mp_'
+
+
         proto = environ.get('HTTP_X_FORWARDED_PROTO', self.force_scheme)
 
         if proto:
@@ -324,6 +335,8 @@ class RewriterApp(object):
 
         host_prefix = self.get_host_prefix(environ)
         rel_prefix = self.get_rel_prefix(environ)
+        if wb_url.nobanner:
+            rel_prefix += 'nobanner/'
         full_prefix = host_prefix + rel_prefix
         environ['pywb.host_prefix'] = host_prefix
         pywb_static_prefix = host_prefix + environ.get('pywb.app_prefix', '') + environ.get(
