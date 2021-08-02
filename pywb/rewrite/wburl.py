@@ -101,7 +101,7 @@ class WbUrl(BaseWbUrl):
     QUERY_REGEX = re.compile('^(?:([\w\-:]+)/)?(\d*)[*-](\d*)/?(.+)$')
     #REPLAY_REGEX = re.compile('^(\d*)([a-z]+_|[$][a-z0-9:.-]+)?/{1,3}(.+)$')
     REPLAY_REGEX = re.compile('^(nobanner)?/?(\d*)([a-z]+_|[$][a-z0-9:.-]+)?/{1,3}(.+)$')
-    CONTINUITY_REGEX = re.compile('^([+])([a-z]+_)?/{1,3}(.+)$')
+    CONTINUITY_REGEX = re.compile('^(nobanner)?/?([+])([a-z]+_)?/{1,3}(.+)$')
     #LATEST_REPLAY_REGEX = re.compile('^\w_)')
 
     DEFAULT_SCHEME = 'http://'
@@ -265,9 +265,11 @@ class WbUrl(BaseWbUrl):
 
         res = continuity.groups('')
 
-        self.timestamp = res[0]
-        self.mod = res[1]
-        self.url = res[2]
+        self.nobanner = True if res[0] == 'nobanner' else False
+        self.timestamp = res[1]
+        self.mod = res[2]
+        self.url = res[3]
+
         if self.url.endswith('*'):
             self.type = self.CONTINUITY
             self.url = self.url[:-1]
