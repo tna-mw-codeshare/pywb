@@ -1,3 +1,27 @@
+pywb 2.6.0 changelist
+~~~~~~~~~~~~~~~~~~~~~
+
+* Improvements for eval() rewriting + extra unnamed scope to avoid variable collision `#668 <https://github.com/webrecorder/pywb/pull/668>`_
+
+* fix for documentation links `#666 <https://github.com/webrecorder/pywb/pull/666>`_
+
+* Update to latest wombat.js (3.3.0)
+
+
+pywb 2.6.0b4 changelist
+~~~~~~~~~~~~~~~~~~~~~~~
+
+* Update rules for IG rewriting to disable Dash `#662 <https://github.com/webrecorder/pywb/pull/662>`_
+
+* Support for adding custom resource records via PUT ``/<coll>/record`` `#661 <https://github.com/webrecorder/pywb/pull/661>`_
+
+* Fixes for URL encoding for query and remote index `#657 <https://github.com/webrecorder/pywb/pull/657>`_ and `#658 <https://github.com/webrecorder/pywb/pull/658>`_
+
+* Doc fixes for incorrect param name `#651 <https://github.com/webrecorder/pywb/pull/651>`_
+
+* Update to latest wombat.js (3.2.2)
+
+
 pywb 2.6.0b3 changelist
 ~~~~~~~~~~~~~~~~~~~~~~~
 
