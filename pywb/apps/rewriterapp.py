@@ -469,6 +469,22 @@ class RewriterApp(object):
                 raise UpstreamException(r.status_code, url=wb_url.url, details=details)
 
         if response and not keep_frame_response:
+            # update the archived date on banner
+            if wb_url.is_continuity_replay():
+                from bs4 import BeautifulSoup
+
+                memento_datetime = timestamp_to_datetime(http_date_to_timestamp(r.headers.get('Memento-Datetime')))
+
+                soup = BeautifulSoup(response)
+
+                soup.find("span", {"id": "timestamp"}).string.replace_with(
+                    f"{memento_datetime.day} {self.month_abbr(memento_datetime.month)} {memento_datetime.year}")
+
+                soup.find("span", {"id": "mobile-timestamp"}).string.replace_with(
+                    f"{memento_datetime.day} {self.month_abbr(memento_datetime.month)} {memento_datetime.year}")
+
+                return self.format_response(soup, wb_url, full_prefix, is_timegate, is_proxy)
+
             return self.format_response(response, wb_url, full_prefix, is_timegate, is_proxy)
 
         cdx = CDXObject(r.headers.get('Warcserver-Cdx').encode('utf-8'))
@@ -966,7 +982,6 @@ class RewriterApp(object):
         if value and value.lower() == 'xmlhttprequest':
             return True
 
-
         # additional checks for proxy mode only
         if not ('wsgiprox.proxy_host' in environ):
             return False
@@ -990,7 +1005,6 @@ class RewriterApp(object):
             return False
 
         return True
-
 
     def get_base_url(self, wb_url, kwargs):
         type_ = kwargs.get('type')
@@ -1034,3 +1048,13 @@ class RewriterApp(object):
                                                         extra_params=extra_params)
 
         return None
+
+    @staticmethod
+    def month_abbr(value):
+        choices = {
+            '1': 'Jan', '2': 'Feb', '3': 'Mar',
+            '4': 'Apr', '5': 'May', '6': 'Jun',
+            '7': 'Jul', '8': 'Aug', '9': 'Sep',
+            '10': 'Oct', '11': 'Nov', '12': 'Dec'
+        }
+        return choices[str(value)]
