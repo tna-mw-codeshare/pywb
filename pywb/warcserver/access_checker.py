@@ -330,7 +330,13 @@ class AccessChecker(object):
             unique_dates = set()
             for date in dates:
                 unique_dates.add(date)
-            rule = self.find_access_rule_mw(url, unique_dates)
+
+            try:
+                rule = self.find_access_rule_mw(url, unique_dates)
+            except Exception as ex:
+                print(f"error while finding access rule:  {ex}")
+                return
+
             if not rule.allowed_dates:
                 return self.default_rule
 
