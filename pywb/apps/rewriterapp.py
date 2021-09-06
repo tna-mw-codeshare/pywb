@@ -475,7 +475,7 @@ class RewriterApp(object):
 
                 memento_datetime = timestamp_to_datetime(http_date_to_timestamp(r.headers.get('Memento-Datetime')))
 
-                soup = BeautifulSoup(response)
+                soup = BeautifulSoup(response, features="lxml")
 
                 soup.find("span", {"id": "timestamp"}).string.replace_with(
                     f"{memento_datetime.day} {self.month_abbr(memento_datetime.month)} {memento_datetime.year}")
