@@ -767,7 +767,7 @@ class RewriterApp(object):
 
         params = {'url': wb_url.url, 'closest': closest, 'matchType': 'exact'}
 
-        if wb_url.is_continuity_replay():
+        if wb_url.is_continuity_replay() or len(wb_url.timestamp) == 0:
             params['filter'] = '~status:[2][0][0-6]'
 
         else:
