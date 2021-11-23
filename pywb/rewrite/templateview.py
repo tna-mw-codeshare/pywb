@@ -352,7 +352,7 @@ class BaseInsertView(object):
             kwargs.update(params)
 
         kwargs['env'] = env
-        kwargs['static_prefix'] = env.get('pywb.host_prefix', '') + env.get('pywb.app_prefix', '') + '/static'
+        kwargs['static_prefix'] = env.get('pywb.static_prefix', '/static')
 
 
         return template.render(**kwargs)
