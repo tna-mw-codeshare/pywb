@@ -6,6 +6,8 @@ from pywb.utils.io import no_except_close
 from pywb.utils.wbexception import NotFoundException
 from pywb.warcserver.resource.blockrecordloader import BlockArcWarcRecordLoader
 
+import loc_cdx_resolver
+
 
 # =================================================================
 class ResolvingLoader(object):
@@ -13,10 +15,11 @@ class ResolvingLoader(object):
 
     EMPTY_DIGEST = '3I42H3S6NNFQ2MSVX7XZKYAYSCX5QBYJ'
 
-    def __init__(self, path_resolvers, record_loader=None, no_record_parse=False):
+    def __init__(self, path_resolvers, record_loader=None, no_record_parse=False, **kwargs):
         self.path_resolvers = path_resolvers
         self.record_loader = record_loader if record_loader is not None else BlockArcWarcRecordLoader()
         self.no_record_parse = no_record_parse
+        self.warc_path_translators = kwargs.get('warc_path_translators', [])
 
     def __call__(self, cdx, failed_files, cdx_loader, *args, **kwargs):
         headers_record, payload_record = self.load_headers_and_payload(cdx, failed_files, cdx_loader)
@@ -120,6 +123,13 @@ class ResolvingLoader(object):
         last_exc = None
         last_traceback = None
         for resolver in self.path_resolvers:
+            if resolver.template in self.warc_path_translators:
+                new_cdx = loc_cdx_resolver.resolver.warc_filename_lookup(cdx)
+                if not new_cdx:
+                    continue
+
+                filename = new_cdx['filename']
+
             possible_paths = resolver(filename, cdx)
 
             if not possible_paths:

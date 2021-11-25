@@ -166,13 +166,12 @@ class BaseLoader(object):
 
 #=============================================================================
 class WARCPathLoader(DefaultResolverMixin, BaseLoader):
-    def __init__(self, paths, cdx_source):
+    def __init__(self, paths, cdx_source, **kwargs):
         self.paths = paths
 
         self.resolvers = self.make_resolvers(self.paths)
 
-        self.resolve_loader = ResolvingLoader(self.resolvers,
-                                              no_record_parse=True)
+        self.resolve_loader = ResolvingLoader(self.resolvers, no_record_parse=True, **kwargs)
 
         self.headers_parser = StatusAndHeadersParser([], verify=False)
 

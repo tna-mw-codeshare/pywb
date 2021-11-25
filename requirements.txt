@@ -15,3 +15,4 @@ wsgiprox>=1.5.1
 fakeredis<1.0
 tldextract
 python-dateutil
+loc-cdx-resolver @ git+ssh://git@github.com/mirrorweb/loc-cdx-resolver@main

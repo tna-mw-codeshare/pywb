@@ -21,6 +21,8 @@ from pywb.warcserver.access_checker import AccessChecker, CacheDirectoryAccessSo
 
 from pywb import DEFAULT_CONFIG
 
+import loc_cdx_resolver
+
 from six import iteritems, iterkeys, itervalues
 from six.moves import zip
 import os
@@ -211,6 +213,7 @@ class WarcServer(BaseWarcServer):
             acl_paths = None
             default_access = self.default_access
             embargo = None
+            warc_path_translators = None
         elif isinstance(coll_config, dict):
             index = coll_config.get('index')
             if not index:
@@ -219,6 +222,7 @@ class WarcServer(BaseWarcServer):
             acl_paths = coll_config.get('acl_paths')
             default_access = coll_config.get('default_access', self.default_access)
             embargo = coll_config.get('embargo')
+            warc_path_translators = coll_config.get('warc_path_translators')
 
         else:
             raise Exception('collection config must be string or dict')
@@ -241,6 +245,9 @@ class WarcServer(BaseWarcServer):
             timeout = int(coll_config.get('timeout', 0))
             agg = init_index_agg(index_group, True, timeout)
 
+        # we need to initialize any path translator resolver caches (if they exist)
+        loc_cdx_resolver.resolver.init(warc_path_translators)
+
         # ARCHIVE CONFIG
         if not archive_paths:
             archive_paths = self.config.get('archive_paths')
@@ -252,7 +259,8 @@ class WarcServer(BaseWarcServer):
 
         return DefaultResourceHandler(agg, archive_paths,
                                       rules_file=self.rules_file,
-                                      access_checker=access_checker)
+                                      access_checker=access_checker,
+                                      warc_path_translators=warc_path_translators)
 
     def init_sequence(self, coll_name, seq_config):
         if not isinstance(seq_config, list):

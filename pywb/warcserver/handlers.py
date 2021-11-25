@@ -12,7 +12,6 @@ import six
 import logging
 import traceback
 
-
 logger = logging.getLogger('warcserver')
 
 
@@ -158,6 +157,7 @@ class ResourceHandler(IndexHandler):
             for loader in self.resource_loaders:
                 try:
                     out_headers, resp = loader(cdx, params)
+
                     if resp is not None:
                         return out_headers, resp, errs
                 except (WbException, ArchiveLoadFailed) as e:
@@ -174,12 +174,12 @@ class ResourceHandler(IndexHandler):
 
 #=============================================================================
 class DefaultResourceHandler(ResourceHandler):
-    def __init__(self, index_source, warc_paths='', forward_proxy_prefix='',
-                 **kwargs):
-        loaders = [WARCPathLoader(warc_paths, index_source),
-                   LiveWebLoader(forward_proxy_prefix),
-                   VideoLoader()
-                  ]
+    def __init__(self, index_source, warc_paths='', forward_proxy_prefix='', **kwargs):
+        loaders = [
+            WARCPathLoader(warc_paths, index_source, **kwargs),
+            LiveWebLoader(forward_proxy_prefix),
+            VideoLoader()
+        ]
         super(DefaultResourceHandler, self).__init__(index_source, loaders, **kwargs)
 
 
