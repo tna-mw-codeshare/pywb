@@ -321,7 +321,7 @@ class RewriterApp(object):
         environ['pywb.static_prefix'] = environ['pywb.host_prefix'] + environ['pywb.app_prefix'] + '/' + self.static_prefix
 
     def render_content(self, wb_url, kwargs, environ):
-        wb_url = wb_url.replace('#', '%23')
+        wb_url = wb_url.replace('#', '%23').replace('&', '%26')
         wb_url = WbUrl(wb_url)
         
         # check for nobanner mode.
